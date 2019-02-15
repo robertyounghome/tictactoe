@@ -1,2 +1,2 @@
 # tictactoe
-TicTacToe written in Python with Tkinter GUI
+TicTacToe written in Python 3 with Tkinter GUI
