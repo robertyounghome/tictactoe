@@ -55,6 +55,9 @@ class Game:
 
 	def __init__(self):
 		self.reset()
+		self.x = PhotoImage(file="x.gif").subsample(2, 2)
+		self.o = PhotoImage(file="o.gif").subsample(2, 2)
+		self.blank = PhotoImage(file="blank.gif").subsample(2, 2)
 
 	def printBoard(self):
 		for i in range(3):
@@ -100,7 +103,10 @@ class Game:
 	def move(self, x, y, s):
 		self.board[x][y] = s
 		print(self.buttons)
-		self.buttons[x][y].configure(text=s) 
+		if s == 'X':
+			self.buttons[x][y].configure(image=self.x, compound="left") 
+		else:
+			self.buttons[x][y].configure(image=self.o, compound="left") 			
 		self.valid.pop(self.valid.index([x,y]))
 		self.turn += 1
 		print(self.board)
@@ -118,7 +124,7 @@ class Game:
 	def boardReset(self):
 		for x in range(3):
 			for y in range(3):
-				game.buttons[x][y].configure(text='')
+				game.buttons[x][y].configure(image=self.blank, compound="left")
 
     # Prompts user in the GUI.  Returns True if the user wants to play again, otherwise False
 	def playAgain(self, player = None):
@@ -129,40 +135,42 @@ class Game:
 
     # A move was made from our GUI
 	def tkmove(self, x, y, player, computer, root):
+		print(self.turn, player.text, x, y)		
 		def winOrTie(player1, player2):
 			win = self.won(player1, player2)
 			tie = self.tied(player1, player2)
 			winner = None
 			if win:
-				winner = player
-				if win or tie:
-					if self.playAgain(winner):
-						self.reset()
-						self.boardReset()
-					else:
-						root.destroy()
+				winner = player1
+			if win or tie:
+				if self.playAgain(winner):
+					self.reset()
+					self.boardReset()
+					return True
+				else:
+					root.destroy()
+					return True
+			return False
 
 		if (self.turn % 2 == 0 and player.text == 'X') or (self.turn % 2 and player.text == 'O'):
 			if self.checkMove(x, y):
 				self.move(x, y, player.text)
-				winOrTie(player, computer)
-			else:
-				self.randomMove(computer.text)
-				winOrTie(computer, player)
+				if not winOrTie(player, computer):
+					self.randomMove(computer.text)
+					winOrTie(computer, player)
 
 # GUI interface, clicking a button triggers an event calling tkmove of the Game class
 if __name__ == '__main__':
 	player = Player("Player", "X")
 	computer = Player("Computer", "O")
 	root = Tk()
-	helv36 = font.Font(family='Helvetica', size=10, weight='bold')
 	game = Game()
 	game.buttons = []
 	s = 'X'
 	for x in range(3):
 		game.buttons += [[]]
 		for y in range(3):
-			game.buttons[x] += [Button(root, text="", width=30, height=10, borderwidth=5, font=helv36, command=partial(game.tkmove, x, y, player, computer, root))]
+			game.buttons[x] += [Button(root, text="", image=game.blank, borderwidth=5, command=partial(game.tkmove, x, y, player, computer, root))]
 			game.buttons[x][y].grid(row=x,column=y)
 	root.mainloop()
 
